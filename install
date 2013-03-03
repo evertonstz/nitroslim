@@ -1,5 +1,5 @@
 #!/bin/sh
-#this is script will only copy the "nitroslim" file to the "/usr/bin" place#
+#this is script will only copy the "nitroslim" file to the "/usr/local/bin" place#
 if [ $USER != root ]
 then
     echo "Run install script as Root"
@@ -8,11 +8,10 @@ else
     :
 fi
 
-
 FILE=$(basename "$0")
 CURRENT_DIR=$(readlink -f "$0" | sed -e "s/"$FILE"//")
 
-echo -e "This is script will only copy the "nitroslim" executable file to the "/usr/bin" place.\nYou can do it with cp, if you want\n"
+echo -e "This is script will only copy the "nitroslim" executable file to the "/usr/local/bin" place.\nYou can do it with cp, if you want\n"
 echo "Do you want to install Nitroslim? [y]es or no: " && read AW
 
 if [ -z $AW ]
@@ -30,5 +29,5 @@ else
     exit 1
 fi
 
-cp "$CURRENT_DIR/nitroslim" /usr/bin/
+cp "$CURRENT_DIR/nitroslim" /usr/local/bin/
 echo "Successful instaled"
