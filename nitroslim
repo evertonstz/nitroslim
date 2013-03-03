@@ -4,7 +4,7 @@
 # Autor: https://github.com/evertonstz 
 #this scripts move your new selected wallpaper in nitrogen to your slim theme wallpaper#
 #config file location#
-VERSION="0.3"
+VERSION="0.4"
 #set some variables#
 DIR=$(sed -e 's/file=//' -n -e '2,2p' /home/$USER/.config/nitrogen/bg-saved.cfg)
 THEMENAME=$(awk '/current_theme/ { print $2}' /etc/slim.conf)
