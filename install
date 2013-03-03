@@ -25,6 +25,9 @@ elif [ $AW == "no" ] || [ $AW == "n" ]
 then
     echo "Nitroslim not installed. Exiting."
     exit 0
+else
+    echo '"yes" or "no"'
+    exit 1
 fi
 
 cp "$CURRENT_DIR/nitroslim" /usr/bin/
