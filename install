@@ -1,5 +1,17 @@
 #!/bin/sh
 #this is script will only copy the "nitroslim" file to the "/usr/bin" place#
+if [ $USER != root ]
+then
+    echo "Run install script as Root"
+    exit 1
+else
+    :
+fi
+
+
+FILE=$(basename "$0")
+CURRENT_DIR=$(readlink -f "$0" | sed -e "s/"$FILE"//")
+
 echo -e "This is script will only copy the "nitroslim" executable file to the "/usr/bin" place.\nYou can do it with cp, if you want\n"
 echo "Do you want to install Nitroslim? [y]es or no: " && read AW
 
@@ -15,30 +27,5 @@ then
     exit 0
 fi
 
-
-
-if [ -w /usr/bin ]
-then
-    :
-else
-    echo "Run install script as Root"
-        exit 1
-fi
-
-LOCAL=$(find /home/ -name nitroslim -type f  | grep  Software)
-
-if [ $(awk 'NR==2{ print $1}' "$LOCAL") == "#Nitroslim#" ]
-then
-    cp "$LOCAL" /usr/bin/
-    echo "Successful instaled"
-else
-    echo "Can't find nitroslim executable file. Please, inset the local of nitroslim executable file."
-    read LOCAL
-    if [ $(awk 'NR==2{ print $1}' "$LOCAL") == "#Nitroslim#" ]
-    then
-            cp "$LOCAL" /usr/bin/
-            echo "Successful installed"
-    else
-        echo "It's not the correct file. Not installed"
-    fi
-fi
+cp "$CURRENT_DIR/nitroslim" /usr/bin/
+echo "Successful instaled"
