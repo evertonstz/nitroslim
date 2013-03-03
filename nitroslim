@@ -1,0 +1,167 @@
+#!/bin/bash
+#Nitroslim#
+# License: GPL 2.0
+# Autor: https://github.com/evertonstz 
+#this scripts move your new selected wallpaper in nitrogen to your slim theme wallpaper#
+#config file location#
+VERSION="0.3"
+#set some variables#
+SCREENX=$(xrandr | awk 'NR==6{print $1}' | sed 's/x.*//')
+SCREENY=$(xrandr | awk 'NR==6{print $1}' | sed 's/.*x//')
+DIR=$(sed -e 's/file=//' -n -e '2,2p' /home/$USER/.config/nitrogen/bg-saved.cfg)
+THEMENAME=$(awk '/current_theme/ { print $2}' /etc/slim.conf)
+CONFIG="/home/$USER/.config/nitroslim.conf"
+
+
+#check if config file exist, if not, it will create one#
+if [ -f "$CONFIG" ]
+then
+	:
+else
+	touch $CONFIG
+	echo -e "#config file and cache for nitroslim blur#\nblur: 4\ncache: no" >>  $CONFIG
+fi
+
+#check if can write in theme folder#
+if [ -w /usr/share/slim/themes/ ]
+then
+    :
+else
+    echo "You don't have permission to write in /usr/share/slim/themes/."
+    exit 1
+fi
+
+#check if X are running#
+if ! pgrep X &>/dev/null; then
+        echo "Not running X."
+	exit 1
+fi
+
+#dependences#
+if ! type -p convert > /dev/null; then
+        echo 'You must install "imagemagick" (pacman -S imagemagick).'
+		exit 1
+elif ! type -p xrandr > /dev/null; then
+        echo "You must install "xrandr" (pacman -S xorg-xrandr)."
+		exit 1
+elif ! type -p notify-send > /dev/null; then
+        echo "You must install "libnotify" (pacman -S libnotify)."
+        exit 1
+fi
+
+
+#Functions#
+helpblur() {
+    echo -e 'Blur usage: nitroslim -b [VALUE2] or --blur [VALUE2]\nUse a number to define the blur value. Use "0" or "none" for no blur. Default value for blur is 4.\nYou can also change blur in '$CONFIG'.\nIf "cache" in '$CONFIG' is "yes" (default is "no"), it will be cached.'
+    exit 0
+}
+
+#make case#
+case "$1" in
+#check config file#
+#blur#
+-b | --blur) 
+	#check if $2 are empty#
+	if test -z $2
+	then
+		echo 'Use a numerical value for "blur" (ex: nitroslim -b 3).'
+		exit 1
+	fi
+	#convert  "none" into a "0"#
+	if [ $2 != "none" ]
+		then
+		BLUR="$2"
+	else
+		BLUR="0"
+	fi
+	#check if are asking for help#
+	if [ $2  == "--help" ] || [ $2  == "-h" ]
+	then
+        helpblur
+	fi
+	#check if $2 are a number#
+	if ! [[ "$BLUR" =~ ^[0-9]+$ ]] ; then
+		exec >&2; echo "Error: Not a number"; exit 1
+	fi
+	#cache new blur#
+    if [ $(awk '/cache:/ {print $2}' $CONFIG) == "yes" ]
+    then
+	    sed -i 's/blur:.*/blur: '$BLUR'/' "$CONFIG"
+    fi
+    #put new blur#
+        $(convert "$DIR" -gravity center -resize  "$SCREENX"x -crop x"$SCREENY"+0+0 -blur "$BLUR"x"$BLUR" "/usr/share/slim/themes/$THEMENAME/background.jpg")
+    echo "Slim is ready."
+    exit 0
+    ;;
+-c | --cache)
+    if test -z $2
+    then
+        echo 'Use "nitroslim -c -h" for see if your cache are enabled and for help with cache command.'
+        exit 0
+    fi
+    if [ $2  == "--help" ] || [ $2  == "-h" ]
+    then
+        if [ $(awk '/cache:/ {print $2}' $CONFIG) == "yes" ]
+        then
+            echo -e 'You ARE using cache mode.\nUse "nitroslim -c yes" or "nitroslim -c no" to setup cache.'
+        else
+            echo -e 'You ARE NOT using cache mode.\nUse "nitroslim -c yes" or "nitroslim -c no" to setup cache.'
+        fi
+        exit 0
+    fi
+    if [ $2 == "yes" ]
+    then
+        if [ $(awk '/cache:/ {print $2}' $CONFIG) == "yes" ]
+        then
+            echo "Cache is already ON"
+        else
+            sed -i 's/cache:.*/cache: yes/' "$CONFIG"
+            echo "You set cache ON"
+        fi
+        exit 0
+    elif [ "$2" == "no" ]
+    then
+        if [ $(awk '/cache:/ {print $2}' $CONFIG) == "no" ]
+        then
+            echo "Cache is already OFF"
+        else
+            sed -i 's/cache:.*/cache: no/' "$CONFIG"
+            echo "You set cacho OFF"
+        fi
+        exit 0
+    else
+        echo -e 'Input error.\nUse "nitroslim -c -h" for see if your cache are enabled and for help with cache command.'
+        exit 1
+    fi
+    ;;
+#help#
+-h | --help ) 
+#print help#
+echo -e "Usage: nitroslim [VALUE1] [COMMAND].\nVALUES:\n   -b (--blur): Use to setup blur radius (see nitroslim -b -h)\n   -c (--cache): Use to set cache on/off (see nitroslim -c -h)\n   -v (--version): See version\nBy: https://github.com/evertonstz"
+    exit 0
+  ;;
+-v | --version )
+    echo -e "Nitroslim $VERSION"
+    exit 0
+    ;;
+*)#if no blur from imput, read the config file#
+    BLUR=$(awk '/blur:/ {print $2}' $CONFIG)
+    echo "Set your new wallpaper, blur is from your config file."
+    ;;
+esac
+
+#run nitrogen#
+$(nitrogen)
+
+if [ -f /usr/share/slim/themes/$THEMENAME/background.png ]
+then
+    rm /usr/share/slim/themes/$THEMENAME/background.png
+else
+    :
+fi
+
+#convert and move to the the theme folder#
+convert "$DIR" -gravity center -resize  "$SCREENX"x -crop x"$SCREENY"+0+0 -blur "$BLUR"x"$BLUR" "/usr/share/slim/themes/$THEMENAME/background.jpg"
+
+#send a simple notify#
+notify-send "Slim is ready"
