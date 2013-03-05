@@ -71,6 +71,24 @@ helpblur() {
     exit 0
 }
 
+settingwall () {
+
+    if [ -f /usr/share/slim/themes/$THEMENAME/background.png ]
+    then
+        rm /usr/share/slim/themes/$THEMENAME/background.png
+    else
+        :
+    fi
+
+    DIR=$(sed -e 's/file=//' -n -e '2,2p' /home/$USER/.config/nitrogen/bg-saved.cfg)
+
+    #convert and move to the the theme folder#
+    $(convert "$DIR" -gravity center -resize  "$SCREENX"x -crop x"$SCREENY"+0+0 -blur "$BLUR"x"$BLUR" "/usr/share/slim/themes/$THEMENAME/background.jpg")
+
+#send a simple notify#
+    notify-send "Slim is ready"
+}
+
 #make case#
 case "$1" in
 #check config file#
@@ -146,9 +164,99 @@ case "$1" in
         fi
         exit 0
     else
-        echo -e 'Input error.\nUse "nitroslim -c -h" for see if your cache are enabled and for help with cache command.'
+        echo -e 'Input Error.\nUse "nitroslim -c -h" for see if your cache are enabled and for help with cache command.'
         exit 1
     fi
+    ;;
+-s | --set)
+    if [ -z "$2" ] #check if $2 are empty#
+    then
+        echo 'Input Error: Use "nitroslim -s -h" for help.'
+        exit 1
+    elif [ -z "$3" ]
+    then
+        echo 'Input Error: you need specify a image to set background.'
+        exit 1
+    fi
+    
+
+    #setting name#
+    WALLNAME=$(basename "$3")
+    #zoom fill#
+    if [ $2 == "zoom-fill" ] || [ $2 == "zf" ]
+    then
+        if [ -f $3 ]
+        then
+            echo "Setting "$WALLNAME" as wallaper in Zoom Fill mode"
+            $(nitrogen --save --set-zoom-fill "$3")
+        else
+            echo "File does not exist."
+            exit 1
+        fi
+    #zoom#
+    elif [ $2 == "zoom" ] || [ $2 == "z" ]
+    then
+        if [ -f $3 ]
+        then
+            echo "Setting "$WALLNAME" as wallaper in Zoom mode"
+            $(nitrogen --save --set-zoom "$3")
+        else
+            echo "File does not exist."
+            exit 1
+        fi
+    #tiled#
+    elif [ $2 == "tiled" ] || [ $2 == "t" ]
+    then
+        if [ -f $3 ]
+        then
+            echo "Setting "$WALLNAME" as wallaper in Tiled mode"
+            $(nitrogen --save --set-tiled "$3")
+        else
+            echo "File does not exist."
+            exit 1
+        fi
+    #scaled#
+    elif [ $2 == "scaled" ] || [ $2 == "s" ]
+    then
+        if [ -f $3 ]
+        then
+            echo "Setting "$WALLNAME" as wallaper in Scaled mode"
+            $(nitrogen --save --set-scaled "$3")
+        else
+            echo "File does not exist."
+            exit 1
+        fi
+    #centered#
+    elif [ $2 == "centered" ] || [ $2 == "c" ]
+    then
+        if [ -f $3 ]
+        then
+            echo "Setting "$WALLNAME" as wallaper in Centered mode"
+            $(nitrogen --save --set-centered "$3")
+        else
+            echo "File does not exist."
+            exit 1
+        fi
+    #auto#
+    elif [ $2 == "auto" ] || [ $2 == "a" ] 
+    then
+        if [ -f $3 ]
+        then
+            echo "Setting "$WALLNAME" as wallaper in Auto mode"
+            $(nitrogen --save --set-auto "$3")
+        else
+            echo "File does not exist."
+            exit 1
+        fi
+    #
+    else
+        echo 'Input Error: Use "nitroslim -s -h" for help.'
+        exit 1
+    fi
+    #put blur#
+    BLUR=$(awk '/blur:/ {print $2}' $CONFIG)
+    settingwall
+    exit 0
     ;;
 #help#
 -h | --help ) 
@@ -169,17 +277,4 @@ esac
 #run nitrogen#
 $(nitrogen)
 
-if [ -f /usr/share/slim/themes/$THEMENAME/background.png ]
-then
-    rm /usr/share/slim/themes/$THEMENAME/background.png
-else
-    :
-fi
-
-DIR=$(sed -e 's/file=//' -n -e '2,2p' /home/$USER/.config/nitrogen/bg-saved.cfg)
-
-#convert and move to the the theme folder#
-$(convert "$DIR" -gravity center -resize  "$SCREENX"x -crop x"$SCREENY"+0+0 -blur "$BLUR"x"$BLUR" "/usr/share/slim/themes/$THEMENAME/background.jpg")
-
-#send a simple notify#
-notify-send "Slim is ready"
+settingwall
