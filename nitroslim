@@ -63,6 +63,7 @@ if ! type -p nitrogen > /dev/null; then
 fi
 if ! type -p slim > /dev/null; then
         echo "You must install "slim" (pacman -S slim)."
+fi
 
 #Functions#
 helpblur() {
