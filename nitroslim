@@ -4,7 +4,7 @@
 # Autor: https://github.com/evertonstz 
 #this scripts move your new selected wallpaper in nitrogen to your slim theme wallpaper#
 #config file location#
-VERSION="0.5"
+VERSION="0.6"
 #set some variables#
 DIR=$(sed -e 's/file=//' -n -e '2,2p' /home/$USER/.config/nitrogen/bg-saved.cfg)
 THEMENAME=$(awk '/current_theme/ { print $2}' /etc/slim.conf)
@@ -128,11 +128,6 @@ case "$1" in
     exit 0
     ;;
 -c | --cache)
-    if test -z $2
-    then
-        echo 'Use "nitroslim -c -h" for see if your cache are enabled and for help with cache command.'
-        exit 0
-    fi
     if [ $2  == "--help" ] || [ $2  == "-h" ]
     then
         if [ $(awk '/cache:/ {print $2}' $CONFIG) == "yes" ]
@@ -167,111 +162,85 @@ case "$1" in
         echo -e 'Input Error.\nUse "nitroslim -c -h" for see if your cache are enabled and for help with cache command.'
         exit 1
     fi
-    ;;
--s | --set)
-    if [ -z "$2" ] #check if $2 are empty#
+;;
+--set-zoom | --set-scaled | --set-centered | --set-zoom-fill )
+if [ $2 == "-b" ] || [ $2 == "--blur" ]
+then
+    #2 blur #3 blur radius #4 file location#
+    #check if are a number#
+    #check $3 for none and convert to 0#
+    if [ $3 != "none" ]
     then
-        echo 'Input Error: Use "nitroslim -s -h" for help.'
-        exit 1
-    elif [ -z "$3" ]
+        BLUR="$3"
+    else
+        BLUR="0"
+    fi
+
+    if ! [[ "$BLUR" =~ ^[0-9]+$ ]] ; then
+        exec >&2; echo "Error: Not a number"; exit 1
+    fi
+    #cache new blur#
+    if [ $(awk '/cache:/ {print $2}' $CONFIG) == "yes" ]
+    then
+        sed -i 's/blur:.*/blur: '$BLUR'/' "$CONFIG"
+    fi
+
+
+    if [ -z "$4" ]
     then
         echo 'Input Error: you need specify a image to set background.'
         exit 1
     fi
-    
-
-    #setting name#
-    WALLNAME=$(basename "$3")
-    #zoom fill#
-    if [ $2 == "zoom-fill" ] || [ $2 == "zf" ]
+    if [ -f $4 ]
     then
-        if [ -f $3 ]
-        then
-            echo "Setting "$WALLNAME" as wallaper in Zoom Fill mode"
-            $(nitrogen --save --set-zoom-fill "$3")
-        else
-            echo "File does not exist."
-            exit 1
-        fi
-    #zoom#
-    elif [ $2 == "zoom" ] || [ $2 == "z" ]
-    then
-        if [ -f $3 ]
-        then
-            echo "Setting "$WALLNAME" as wallaper in Zoom mode"
-            $(nitrogen --save --set-zoom "$3")
-        else
-            echo "File does not exist."
-            exit 1
-        fi
-    #tiled#
-    elif [ $2 == "tiled" ] || [ $2 == "t" ]
-    then
-        if [ -f $3 ]
-        then
-            echo "Setting "$WALLNAME" as wallaper in Tiled mode"
-            $(nitrogen --save --set-tiled "$3")
-        else
-            echo "File does not exist."
-            exit 1
-        fi
-    #scaled#
-    elif [ $2 == "scaled" ] || [ $2 == "s" ]
-    then
-        if [ -f $3 ]
-        then
-            echo "Setting "$WALLNAME" as wallaper in Scaled mode"
-            $(nitrogen --save --set-scaled "$3")
-        else
-            echo "File does not exist."
-            exit 1
-        fi
-    #centered#
-    elif [ $2 == "centered" ] || [ $2 == "c" ]
-    then
-        if [ -f $3 ]
-        then
-            echo "Setting "$WALLNAME" as wallaper in Centered mode"
-            $(nitrogen --save --set-centered "$3")
-        else
-            echo "File does not exist."
-            exit 1
-        fi
-    #auto#
-    elif [ $2 == "auto" ] || [ $2 == "a" ] 
-    then
-        if [ -f $3 ]
-        then
-            echo "Setting "$WALLNAME" as wallaper in Auto mode"
-            $(nitrogen --save --set-auto "$3")
-        else
-            echo "File does not exist."
-            exit 1
-        fi
-    #
-    else
-        echo 'Input Error: Use "nitroslim -s -h" for help.'
+        WALLNAME=$(basename "$4")
+        echo $4
+        echo "Setting "$WALLNAME" as wallaper in "$1" mode"
+        $(nitrogen --save $1 "$4")
+        #put blur#
+        settingwall
+        exit 0
+     else
+        echo "File does not exist."
         exit 1
     fi
-    #put blur#
-    BLUR=$(awk '/blur:/ {print $2}' $CONFIG)
-    settingwall
-    exit 0
-    ;;
+   
+
+else
+    if [ -z "$2" ]
+    then
+        echo 'Input Error: you need specify a image to set background.'
+        exit 1
+    fi
+    if [ -f $2 ]
+    then
+        WALLNAME=$(basename "$2")
+        echo "Setting "$WALLNAME" as wallaper in "$1" mode"
+        $(nitrogen --save $1 "$2")
+        #put blur#
+        BLUR=$(awk '/blur:/ {print $2}' $CONFIG)
+        settingwall
+        exit 0
+     else
+        echo "File does not exist."
+        exit 1
+    fi
+fi
+;;
 #help#
 -h | --help ) 
 #print help#
 echo -e "Usage: nitroslim [VALUE1] [COMMAND].\nVALUES:\n   -b (--blur): Use to setup blur radius (see nitroslim -b -h)\n   -c (--cache): Use to set cache on/off (see nitroslim -c -h)\n   -v (--version): See version\nIf you are having resolution problems, you can change resolution in $CONFIG\nBy: https://github.com/evertonstz"
     exit 0
-  ;;
+;;
 -v | --version )
     echo -e "Nitroslim $VERSION"
     exit 0
-    ;;
+;;
 *)#if no blur from imput, read the config file#
     BLUR=$(awk '/blur:/ {print $2}' $CONFIG)
     echo "Set your new wallpaper, blur is from your config file."
-    ;;
+;;
 esac
 
 #run nitrogen#
