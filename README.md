@@ -1,6 +1,5 @@
-nitroslim
+nitroslim 0.7
 =========
-### Nitroslim 0.7 ###
 
 ### Changelog ###
 0.7 - now you can set random wallpapers. You can cron it too.
