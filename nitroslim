@@ -4,16 +4,17 @@
 # Autor: https://github.com/evertonstz 
 #this scripts move your new selected wallpaper in nitrogen to your slim theme wallpaper#
 #config file location#
-VERSION="0.6"
+VERSION="0.7"
 #set some variables#
 DIR=$(sed -e 's/file=//' -n -e '2,2p' /home/$USER/.config/nitrogen/bg-saved.cfg)
 THEMENAME=$(awk '/current_theme/ { print $2}' /etc/slim.conf)
-CONFIG="/home/$USER/.config/nitroslim.conf"
+CONFIG="/home/$USER/.config/nitroslim/nitroslim.conf"
 
 if [ -f "$CONFIG" ]
 then
     :
 else
+    mkdir /home/$USER/.config/nitroslim/
     touch $CONFIG
     echo -e "#config file and cache for nitroslim blur#\nblur: 4\ncache: no\n#uncomment next line for setup a custom resolution#\n#resolution: 1440x900" >>  $CONFIG
 fi
@@ -30,7 +31,7 @@ else
     SCREENY=$(xrandr --verbose | grep *current | awk '{print $1}' | sed 's/.*x//')
 fi
 
-
+ 
 #check if can write in theme folder#
 if [ -w /usr/share/slim/themes/ ]
 then
@@ -69,6 +70,17 @@ fi
 helpblur() {
     echo -e 'Blur usage: nitroslim -b [VALUE2] or --blur [VALUE2]\nUse a number to define the blur value. Use "0" or "none" for no blur. Default value for blur is 4.\nYou can also change blur in '$CONFIG'.\nIf "cache" in '$CONFIG' is "yes" (default is "no"), it will be cached.'
     exit 0
+}
+settingwallnonot () {
+    if [ -f /usr/share/slim/themes/$THEMENAME/background.png ]
+    then
+        rm /usr/share/slim/themes/$THEMENAME/background.png
+    else
+        :
+    fi
+    DIR=$(sed -e 's/file=//' -n -e '2,2p' /home/$USER/.config/nitrogen/bg-saved.cfg)
+    #convert and move to the the theme folder#
+    $(convert "$DIR" -gravity center -resize  "$SCREENX"x -crop x"$SCREENY"+0+0 -blur "$BLUR"x"$BLUR" "/usr/share/slim/themes/$THEMENAME/background.jpg")
 }
 
 settingwall () {
@@ -227,10 +239,83 @@ else
     fi
 fi
 ;;
+-r | --random )
+    #create variables#
+    DATABASE="/home/$USER/.config/nitroslim/wallpaper.db"
+    WALLDIR=$(grep dirs* /home/$USER/.config/nitrogen/nitrogen.cfg | sed 's/.*dirs=//'|sed -e 's/;//')
+#check if db are deprecated#
+    if [[ $2 == "-h" ]] || [[ $2 == "--help" ]]
+    then
+        echo 'Run "nitroslim -r" to set a random wallpaper from your slim wallpaper folder. To manually update database, just use: "nitroslim -r dbupdate"'
+        exit 0
+    fi
+#create db#
+    if [[ $2 == "dbupdate" ]] 
+    then
+        $(find "$WALLDIR" -maxdepth "10" -name "*.jpg" -o -name "*.JPG" -o -name "*.png" -o -name "*.PNG" -o -name "*.gif" -o -name "*.GIF" > "$DATABASE")
+        echo 'Database updated '$(cat "$DATABASE" | wc -l)' Files founded'
+        exit 0
+    fi
+#stop if screen are locked#    
+    if [ -z $(pidof slimlock) ]; then
+        :
+    else
+        exit 1
+    fi
+#check db#
+    if [ -f "$DATABASE" ]
+    then
+        NOWNBR=$(find "$WALLDIR" -maxdepth "10" -name "*.jpg" -o -name "*.JPG" -o -name "*.png" -o -name "*.PNG" -o     -name "*.gif" -o -name "*.GIF" | wc -l)
+        DBNBR=$(cat "$DATABASE" | wc -l)
+        if [ $NOWNBR == $DBNBR ]
+        then
+            :
+        else
+            $(find "$WALLDIR" -maxdepth "10" -name "*.jpg" -o -name "*.JPG" -o -name "*.png" -o -name "*.PNG" -o     -name "*.gif" -o -name "*.GIF" > "$DATABASE")
+            echo 'Database updated '$(cat "$DATABASE" | wc -l)' Files founded'
+        fi
+    else
+        $(find "$WALLDIR" -maxdepth "10" -name "*.jpg" -o -name "*.JPG" -o -name "*.png" -o -name "*.PNG" -o     -name "*.gif" -o -name "*.GIF" > "$DATABASE")
+        echo 'Database updated '$(cat "$DATABASE" | wc -l)' Files founded'
+    fi
+    MANY=$(cat "$DATABASE" | wc -l)
+#get a random number function, by Bill G.#
+    NUMRANDOM=$(echo $RANDOM % $MANY + 1 | bc)
+#set wallpaper#
+    WALLRANDOM=$(sed -n "$NUMRANDOM p" "$DATABASE")
+#check if are the same wallpaper#
+    while [[ $WALLRANDOM == $DIR ]]
+    do
+        WALLRANDOM=$(sed -n "$NUMRANDOM p" "$DATABASE")
+    done
+#print the wallpaper name and number#
+    echo "Wallpaper: $(basename $WALLRANDOM) ($NUMRANDOM of $MANY)"
+#set wallpaper#
+    $(nitrogen --save --set-zoom-fill "$WALLRANDOM")
+#apply to slim#
+    settingwallnonot
+    exit 0
+    ;;
 #help#
 -h | --help ) 
 #print help#
-echo -e "Usage: nitroslim [VALUE1] [COMMAND].\nVALUES:\n   -b (--blur): Use to setup blur radius (see nitroslim -b -h)\n   -c (--cache): Use to set cache on/off (see nitroslim -c -h)\n   -v (--version): See version\nIf you are having resolution problems, you can change resolution in $CONFIG\nBy: https://github.com/evertonstz"
+echo "Usage: nitroslim [VALUE1] [COMMAND]"
+echo "VALUES:"
+echo '          -b (--blur):     Use to setup blur radius (see "nitroslim -b -h")'
+echo '          -c (--cache):    Use to set cache on/off (see "nitroslim -c -h")'
+echo '          -v (--version):  See version'
+echo '          -r (--random):   Set a random wallpaper. Can be used with cron (see "nitroslim -r -h")'
+echo 'VALUES TO SET WALLPAPER:'
+echo '          --set-zoom [FILE]:      Set wallpaper in nitrogen zoom mode'
+echo '          --set-scaled [FILE]:    Set wallpaper in nitrogen scaled mode'
+echo '          --set-centered [FILE]:  Set wallpaper in nitrogen centered mode'
+echo '          --set-zoom-fil [FILE]:  Set wallpaper in nitrogen zoom-fill mode'
+echo 
+echo 'If you are having resolution problems, you can change resolution in $CONFIG'
+echo
+echo 'By: https://github.com/evertonstz'
+echo
+echo 'License: GPL 2.0'
     exit 0
 ;;
 -v | --version )
