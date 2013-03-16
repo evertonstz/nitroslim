@@ -12,10 +12,10 @@ To install, just run "install" file as root or copy "nitroslim" to /usr/bin/"
 
 AUR: https://aur.archlinux.org/packages/nitroslim/
 
-### What theme do you use on screenshot? ###
+### What Slim theme do you use on screenshot? ###
 Slim theme of the screenshot can be downloaded here: http://evertonstz.deviantart.com/art/MinimalistForTiling-357388193
 
-### How it works ###
+### How it works? ###
 
 ![Info](https://github.com/evertonstz/nitroslim/raw/master/info.png)
 
