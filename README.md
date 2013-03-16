@@ -1,5 +1,7 @@
 nitroslim
 =========
+Changelog:
+0.7 - now you can set random wallpapers. You can cron it too.
 
 Sync new Nitrogen wallpaper with Slim/Slimlock. This will put some blur (blur radius is changeble) and will crop to your aspect ratio.
 
