@@ -11,11 +11,12 @@ Basically Nitroslin is a piece of code to "sync" your Nitrogen wallpaper with Sl
 ### What Slim theme did I use in the screenshot? ###
 pacman -S archlinux-themes-slim
 
-### How it works? ###
+### How does it work? ###
+
 
 ![Info](https://github.com/evertonstz/nitroslim/raw/master/info.png)
 
-### Results (screemshots) ###
+### Results (screenshots) ###
 
 ### Slim ###
 ![Scrot2](http://i.imgur.com/0b2dwqR.png)
