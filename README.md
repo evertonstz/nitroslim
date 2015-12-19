@@ -1,19 +1,15 @@
-nitroslim 0.7
+nitroslim 0.9
 =========
 
 ### Changelog ###
-0.7 - now you can set random wallpapers. You can cron it too.
+0.9 - code migrated to python 3. It's not fully implemented yet, some new features are brightness (soon to be auto set) and contrast. Random mode not fully implemented yet in this version.
+0.7 - now you can set random wallpapers. Try to cron it!
 
-### What this thing do? ###
-Sync new Nitrogen wallpaper with Slim/Slimlock. This will put some blur (blur radius is changeble) and will crop to your aspect ratio.
+### What this contraption does? ###
+Basically Nitroslin is a piece of code to "sync" your Nitrogen wallpaper with Slim/Slimlock wallpaper, giving it a fake transparent apearance. You can set blur, brightness and even contrast to the new image.
 
-### Install ###
-To install, just run "install" file as root or copy "nitroslim" to /usr/bin/"
-
-AUR: https://aur.archlinux.org/packages/nitroslim/
-
-### What Slim theme do you use on screenshot? ###
-Slim theme of the screenshot can be downloaded here: http://evertonstz.deviantart.com/art/MinimalistForTiling-357388193
+### What Slim theme did I use in the screenshot? ###
+pacman -S archlinux-themes-slim
 
 ### How it works? ###
 
@@ -22,6 +18,6 @@ Slim theme of the screenshot can be downloaded here: http://evertonstz.deviantar
 ### Results (screemshots) ###
 
 ### Slim ###
-![Scrot2](http://i.imgur.com/l9k5sNS.jpg)
+![Scrot2](http://i.imgur.com/0b2dwqR.png)
 ### Desktop ###
-![Scrot](http://i.imgur.com/GoZOCtD.jpg)
+![Scrot](http://i.imgur.com/Ob1a4og.jpg)
